@@ -27,6 +27,7 @@ info() {
 usage() {
   printf >&2 'usage: tmux-sessionizer [-c] NAME\n'
   printf >&2 'options:\n'
+  # shellcheck disable=2016
   printf >&2 '  -c  create directory in "${TMUX_SESSIONIZER_DEFAULT_DIR}" ("%s") if not exists\n' "${TMUX_SESSIONIZER_DEFAULT_DIR}"
 }
 
@@ -34,7 +35,6 @@ get_all_dirs() {
   dirs="$(
     IFS=':'
     for directory in $(printf '%s' "${TMUX_SESSIONIZER_PATH}"); do
-      [ -n "${DEBUG-}" ] && info "directory='${directory}'"
       [ -d "${directory}" ] || continue
       find 2>/dev/null "${directory}" -mindepth 1 -maxdepth 1 -type 'd'
     done
@@ -72,13 +72,10 @@ done
 # guard - no dirs
 all_dirs="$(get_all_dirs)" || exit 1
 
-[ -n "${DEBUG-}" ] && info "alldirs: ${all_dirs}"
-
 # select
 if [ "${#}" -ge 1 ]; then
   selected="$(
       for directory in ${all_dirs}; do
-        [ -n "${DEBUG-}" ] && info "basename='$(basename "${directory}")'"
         [ "$(basename "${directory}")" = "${1}" ] &&
           printf '%s' "${directory}" &&
           break
@@ -88,8 +85,6 @@ if [ "${#}" -ge 1 ]; then
 else
   selected=$(get_all_dirs | fzf) || exit 1
 fi
-
-[ -n "${DEBUG-}" ] && info "selected='${selected}'"
 
 selected_name=$(basename "${selected}" | tr . -)
 
