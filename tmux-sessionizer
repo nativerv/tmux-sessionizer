@@ -96,7 +96,7 @@ if [ "${#}" -ge 1 ]; then
   )"
   [ -z "${selected}" ] && info "ERROR: no such project in your dirs: '${1}'" && exit 1
 else
-  selected=$(get_all_dirs | fzf) || exit 1
+  selected=$(get_all_dirs | fzf) || { [ "${?}" = 1 ] && info 'fzf: ERROR: no match' && exit 1; }
 fi
 
 sessionize
