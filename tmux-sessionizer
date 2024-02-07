@@ -3,22 +3,31 @@
 
 # Author: nrv
 # Description:
-#   Open a tmux session inside a directory from a list
-#   works from outside, inside, and with tmux killed.
-#   Either specify the dir, or fzf will be spawned for
-#   you to find it.
+#   Open a tmux session inside a directory from a list.
+#   Works from outside of and inside tmux, whether the server
+#   is already running or not.
+#   Either specify the dir, or fzf will be opened for
+#   you to find it in listed directories.
 #   Env vars to specify dirs are listed below.
 # Credit: <https://github.com/ThePrimeagen/.dotfiles/blob/master/bin/.local/scripts/tmux-sessionizer>
 
 set -u
 
-# colon-separated list like PATh
+# colon-separated list like PATH
 : "${TMUX_SESSIONIZER_PATH:="${HOME}/pr"}"
-# colon-separated list of dirs to include, but not lookup in
+# colon-separated list of dirs to include as projects
 : "${TMUX_SESSIONIZER_ADDITIONAL_DIRS:="${HOME}/dot"}"
+# default new directory location (place to create new dirs with `-c`)
+: "${TMUX_SESSIONIZER_DEFAULT_DIR:="${HOME}/pr"}"
 
 info() {
   printf >&2 'tmux-sessionizer: %s\n' "${1}"
+}
+
+usage() {
+  printf >&2 'usage: tmux-sessionizer [-c] NAME\n'
+  printf >&2 'options:\n'
+  printf >&2 '  -c  create directory in "${TMUX_SESSIONIZER_DEFAULT_DIR}" ("%s") if not exists\n' "${TMUX_SESSIONIZER_DEFAULT_DIR}"
 }
 
 get_all_dirs() {
@@ -43,6 +52,22 @@ get_all_dirs() {
   printf '%s' "${additional_dirs}"
 }
 
+create=
+while :; do
+  case "${1-}" in
+    -h|-\?|--help) usage && exit ;;
+    -c|--create) create=true ;;
+    --) shift && break ;;
+    -?*) info "ERROR: unknown option: '${1}'" && usage && exit 1 ;;
+    *) break ;;
+  esac
+  shift
+done
+
+# guard - create without NAME
+[ "${create}" = true ] && [ "${#}" -eq 0 ] && info 'ERROR: no NAME specified' && usage && exit 1
+# FIXME: path still can be specified instead of plain name.
+[ "${create}" = true ] && mkdir -p "${TMUX_SESSIONIZER_DEFAULT_DIR}/${1}"
 
 # guard - no dirs
 all_dirs="$(get_all_dirs)" || exit 1
