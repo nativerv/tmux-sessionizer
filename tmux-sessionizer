@@ -50,7 +50,7 @@ all_dirs="$(get_all_dirs)" || exit 1
 [ -n "${DEBUG-}" ] && info "alldirs: ${all_dirs}"
 
 # select
-if [ "${#}" -eq 1 ]; then
+if [ "${#}" -ge 1 ]; then
   selected="$(
       for directory in ${all_dirs}; do
         [ -n "${DEBUG-}" ] && info "basename='$(basename "${directory}")'"
