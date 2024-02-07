@@ -14,9 +14,9 @@
 set -u
 
 # colon-separated list like PATH
-: "${TMUX_SESSIONIZER_PATH:="${HOME}/pr"}"
+: "${TMUX_SESSIONIZER_PATH:="${HOME}/pr:${HOME}/Documents/Projects"}"
 # colon-separated list of dirs to include as projects
-: "${TMUX_SESSIONIZER_ADDITIONAL_DIRS:="${HOME}/dot"}"
+: "${TMUX_SESSIONIZER_ADDITIONAL_DIRS:="${HOME}/dot:${HOME}/.dotfiles"}"
 # default new directory location (place to create new dirs with `-c`)
 : "${TMUX_SESSIONIZER_DEFAULT_DIR:="${HOME}/pr"}"
 
@@ -52,6 +52,19 @@ get_all_dirs() {
   printf '%s' "${additional_dirs}"
 }
 
+sessionize() {
+  selected_name=$(basename "${selected}" | tr . -)
+
+  # ensure desired session exists
+  if ! tmux has-session -t="${selected_name}" 2> /dev/null; then
+    tmux new-session -ds "${selected_name}" -c "${selected}"
+  fi
+
+  # switch
+  [ -z "${TMUX-}" ] && tmux attach -t "${selected_name}"
+  [ -n "${TMUX-}" ] && tmux switch-client -t "${selected_name}"
+}
+
 create=
 while :; do
   case "${1-}" in
@@ -67,7 +80,7 @@ done
 # guard - create without NAME
 [ "${create}" = true ] && [ "${#}" -eq 0 ] && info 'ERROR: no NAME specified' && usage && exit 1
 # FIXME: path still can be specified instead of plain name.
-[ "${create}" = true ] && mkdir -p "${TMUX_SESSIONIZER_DEFAULT_DIR}/${1}"
+[ "${create}" = true ] && selected="${TMUX_SESSIONIZER_DEFAULT_DIR}/${1}" && mkdir -p "${selected}" && sessionize
 
 # guard - no dirs
 all_dirs="$(get_all_dirs)" || exit 1
@@ -86,13 +99,4 @@ else
   selected=$(get_all_dirs | fzf) || exit 1
 fi
 
-selected_name=$(basename "${selected}" | tr . -)
-
-# ensure desired session exists
-if ! tmux has-session -t="${selected_name}" 2> /dev/null; then
-  tmux new-session -ds "${selected_name}" -c "${selected}"
-fi
-
-# switch
-[ -z "${TMUX-}" ] && tmux attach -t "${selected_name}"
-[ -n "${TMUX-}" ] && tmux switch-client -t "${selected_name}"
+sessionize
