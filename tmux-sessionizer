@@ -47,9 +47,9 @@ get_all_dirs() {
   [ -z "${dirs}" ] && [ -z "${additional_dirs}" ] && return 1                  
 
   # print dirs
-  printf '%s' "${dirs}"
-  [ -n "${dirs}" ] && printf '\n'
   printf '%s' "${additional_dirs}"
+  [ -n "${dirs}" ] && printf '\n'
+  printf '%s' "${dirs}"
 }
 
 sessionize() {
